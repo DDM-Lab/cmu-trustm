@@ -1,0 +1,4 @@
+fastapi==0.89.1
+nltk==3.8.1
+pyibl==5.0
+uvicorn==0.20.0
