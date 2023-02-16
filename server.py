@@ -29,9 +29,11 @@ def word_count(target, probe):
 
 
 class Pir(BaseModel):
+    user: str
     name: str
 
 class Card(BaseModel):
+    user: str
     id: str | None = None
     name: str | None
     content: str | None = None
@@ -40,8 +42,12 @@ class Card(BaseModel):
 
 class Action(BaseModel):
     # used both for replies from the model and for supplying feedback to the model
+    user: str
     id: str
     action: str
+
+class User(BaseModel):
+    user: str
 
 
 class State:
@@ -75,7 +81,7 @@ class State:
                    for action in ACTIONS]
         choice = self.agent.choose(options)[-1]
         self.card_map[card.id] = [choice, self.agent.respond()]
-        return Action(id=card.id, action=choice)
+        return Action(user=self.pir.user, id=card.id, action=choice)
 
     def mark(self, action):
         choice, df = self.card_map.get(action.id)
@@ -84,21 +90,39 @@ class State:
         return None
 
 
-state = None
+states = {}
 
 app = FastAPI()
 
 @app.post("/start")
 def start(pir: Pir):
-    global state
-    state = State(pir)
+    global states
+    states[pir.user] = State(pir)
 
 @app.post("/query")
 def query(card: Card):
-    global state
-    return state.query(card)
+    global states
+    try:
+        return states[card.user].query(card)
+    except Exception:
+        # Long term we need to log stuff, including errors, and probably tell the caller
+        # something has gone wrong, too.
+        pass
 
 @app.post("/mark")
 def mark(action: Action):
-    global state
-    state.mark(action)
+    global states
+    try:
+        return states[action.user].mark(action)
+    except Exception:
+        # Long term we need to log stuff, including errors, and probably tell the caller
+        # something has gone wrong, too.
+        pass
+
+@app.post("/finish")
+def finish(user: User):
+    global states
+    try:
+        del states[user.user]
+    except Exception:
+        pass
