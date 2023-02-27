@@ -40,8 +40,13 @@ class Card(BaseModel):
     confidence: float | None = None
 
 
-class Action(BaseModel):
-    # used both for replies from the model and for supplying feedback to the model
+class Response(BaseModel):
+    user: str
+    id: str
+    action: str
+    confidence: dict
+
+class Feedback(BaseModel):
     user: str
     id: str
     action: str
@@ -49,6 +54,8 @@ class Action(BaseModel):
 class User(BaseModel):
     user: str
 
+
+from pprint import pp
 
 class State:
 
@@ -74,19 +81,30 @@ class State:
         self.card_map = {}
 
     def query(self, card):
+        print("fuck?")
+        pp(card)
         options = [[word_count(self.pir_words, string_words(card.name)),
                     word_count(self.pir_words, string_words(card.content)),
                     card.confidence,
                     action]
                    for action in ACTIONS]
+        self.agent.details = True
+        print("bugger?")
         choice = self.agent.choose(options)[-1]
+        pp(self.agent.details)
+        print("damn")
+        det = self.agent.details[0]
+        s = sum(d["blended"] for d in det)
+        conf = {d["action"]: d["blended"] / s for d in det}
+        pp(conf)
         self.card_map[card.id] = [choice, self.agent.respond()]
-        return Action(user=self.pir.user, id=card.id, action=choice)
+        print("here")
+        return Response(user=self.pir.user, id=card.id, action=choice, confidence=conf)
 
-    def mark(self, action):
-        choice, df = self.card_map.get(action.id)
+    def mark(self, feedback):
+        choice, df = self.card_map.get(feedback.id)
         if df is not None:
-            df.update(int(action.action == choice))
+            df.update(int(feedback.action == choice))
         return None
 
 
@@ -104,13 +122,15 @@ def query(card: Card):
     global states
     try:
         return states[card.user].query(card)
-    except Exception:
+    except Exception as e:
         # Long term we need to log stuff, including errors, and probably tell the caller
         # something has gone wrong, too.
+        print("shit, piss and corruption")
+        pp(e)
         pass
 
 @app.post("/mark")
-def mark(action: Action):
+def mark(action: Feedback):
     global states
     try:
         return states[action.user].mark(action)

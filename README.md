@@ -51,7 +51,15 @@ It returns a JSON object of the form
 
     {"user": "<the user id this was called with goes here>",
      "id": "<the same ID as was provided to this call>",
-     "action": <a string one of "up", "down" or "ignore">}
+     "action": <a string one of "up", "down" or "ignore">,
+     "confidence": {"up": <a number between 0 and 1, inclusive>,
+                    "down": <a number between 0 and 1, inclusive>,
+                    "ignore": <a number between 0 and 1, inclusive>}}
+
+The three confidence values should sum to 1, and reflect the *model*’s confidence in these outcomes.
+Typically the highest such value will correspond to the model’s prediction, but if there are ties
+for the highest, a random choice is made; this typically occurs in the first few rounds before
+the model has received much feedback.
 
 ### The `mark` command
 
@@ -96,10 +104,35 @@ Running `make build` builds a Docker container for running the model server.
 
 Running `make run` runs this container, listening on port 8000.
 
-For a trivial example, see `exercise_server.py`, which contains one example of each command.
+For a trivial example, see `exercise_server.py`, which contains examples of each command.
 Once the container is up and running you can confirm that it’s doing something by running
 `python exercise_server.py`. This should print something like
 
-    {'user': 'Elinor Dashwood', 'id': 'card-1', 'action': 'down'}
+    {'user': 'Elinor Dashwood',
+     'id': 'card-0',
+     'action': 'ignore',
+     'confidence': {'up': 0.3333333333333333,
+                    'down': 0.3333333333333333,
+                    'ignore': 0.3333333333333333}}
+    {'user': 'Elinor Dashwood',
+     'id': 'card-1',
+     'action': 'down',
+     'confidence': {'up': 0.4960843783840418,
+                    'down': 0.4960843783840418,
+                    'ignore': 0.007831243231916345}}
+    {'user': 'Elinor Dashwood',
+     'id': 'card-2',
+     'action': 'up',
+     'confidence': {'up': 0.4916600224784701,
+                    'down': 0.4916600224784701,
+                    'ignore': 0.0166799550430598}}
+    {'user': 'Elinor Dashwood',
+     'id': 'card-3',
+     'action': 'down',
+     'confidence': {'up': 0.14161709283719434,
+                    'down': 0.840225741341456,
+                    'ignore': 0.018157165821349682}}
 
-though the action might be "up" or "ignore" instead.
+
+though each of the `action`s might be any of `"up"`, `"down"` or `"ignore"` instead, and the confidence
+values will typically be different
