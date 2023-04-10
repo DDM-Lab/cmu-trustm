@@ -38,7 +38,7 @@ class Card(BaseModel):
     name: str | None
     content: str | None = None
     confidence: float | None = None
-
+    read: bool = False
 
 class Response(BaseModel):
     user: str

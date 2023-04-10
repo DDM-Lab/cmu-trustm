@@ -2,22 +2,15 @@
 
 This is a simple server providing a JSON API, using FastAPI, to an IBL model for the TRUST’M project.
 
-Note that as of 15 February 2023 this is just a crude, initial pass at such a thing. It’s goal
-is not be anything even approximating the real thing, just a proof of concept that we can
-successfully talk to one another
-
-- The commands provide by this API just reflect the sort of offline models we’ve created to day
-  and are surely not what we want for a real integration with Alfred the Butler. We will need to
-  negotiate a better API for our real needs, which will probably involve a different structure
-  to the interaction between Alfred the Butler and the model.
+Note that as of 10 April 2023 remains an initial pass at such a thing. While the protocol has
+been refined by some negotiation, it is expected more work will be required
 
 - There is essentially no error detection or handling. If calls are made passing data not
   formatted as expected, or in unexpected orders, there will be tears.
 
 - The PyIBL model is just a stripped down, bare bones version of the one we’ve been using
-  for the offline experiments, and is highly unlikely to do anything useful.
+  for the offline experiments, and is unlikely to be what we want long term.
 
-The goal here is like a dancing bear: the wonder isn’t how well it dances, it’s just that it dances at all.
 Further iterations will be required to bring real joy to our hearts, but first steps first.
 
 There are four calls to be made to this server: `start`, `query`, `mark` and `finish`. Each should be called
@@ -45,9 +38,14 @@ opinion of thumbs up, down or ignore. Its argument is of the form
      "id": "<a unquie ID as a string",
      "name": "<the name of this card's document>",
      "content": "<the text of this card's document>",
-     "confidence": <the existing confidence score as a non-negative float>}
+     "confidence": <the existing confidence score as a non-negative float>,
+     “read": <a boolean, JSON true or false>}
 
-It returns a JSON object of the form
+The `read` member is optional, its absence is intended to be treated as the same as `false`;
+it indicates whether or not the user has “opened” the card for further reading, though it provides
+no information of how much the user may or may not have read of it
+.
+The `query` command returns a JSON object of the form
 
     {"user": "<the user id this was called with goes here>",
      "id": "<the same ID as was provided to this call>",
