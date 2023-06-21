@@ -2,17 +2,6 @@
 
 This is a simple server providing a JSON API, using FastAPI, to an IBL model for the TRUST’M project.
 
-Note that as of 10 April 2023 remains an initial pass at such a thing. While the protocol has
-been refined by some negotiation, it is expected more work will be required
-
-- There is essentially no error detection or handling. If calls are made passing data not
-  formatted as expected, or in unexpected orders, there will be tears.
-
-- The PyIBL model is just a stripped down, bare bones version of the one we’ve been using
-  for the offline experiments, and is unlikely to be what we want long term.
-
-Further iterations will be required to bring real joy to our hearts, but first steps first.
-
 There are four calls to be made to this server: `start`, `query`, `mark` and `finish`. Each should be called
 using the POST HTTP method, passing arguments as a JSON object.
 
@@ -38,13 +27,19 @@ opinion of thumbs up, down or ignore. Its argument is of the form
      "id": "<a unquie ID as a string",
      "name": "<the name of this card's document>",
      "content": "<the text of this card's document>",
+     "age": <the number of days since this content was published as a non-negative float>,
+     "author": "<the author of this content>",
+     "source": "<the source of this content>",
      "confidence": <the existing confidence score as a non-negative float>,
      “read": <a boolean, JSON true or false>}
 
 The `read` member is optional, its absence is intended to be treated as the same as `false`;
 it indicates whether or not the user has “opened” the card for further reading, though it provides
-no information of how much the user may or may not have read of it
+no information of how much the user may or may not have read of it.
 .
+
+#### Return value
+
 The `query` command returns a JSON object of the form
 
     {"user": "<the user id this was called with goes here>",
@@ -54,7 +49,7 @@ The `query` command returns a JSON object of the form
                     "down": <a number between 0 and 1, inclusive>,
                     "ignore": <a number between 0 and 1, inclusive>}}
 
-The three confidence values should sum to 1, and reflect the *model*’s confidence in these outcomes.
+The three confidence values sum to 1, and reflect the *model*’s confidence in these outcomes.
 Typically the highest such value will correspond to the model’s prediction, but if there are ties
 for the highest, a random choice is made; this typically occurs in the first few rounds before
 the model has received much feedback.
@@ -73,19 +68,31 @@ It is possible to subsequently call `mark` again to change the mark on a card, i
 Note that the `start` command completely resets the model, forgetting all cards that may have been
 previously seen.
 
-It returns nothing.
+The `mark` command returns nothing.
 
 Note that when the model starts, it is essentially guessing randomly. Until it has received feedback
-of several of the user’s real choices it has no way of making informed decisions. Presumably one of
-the ways we will attempt to improve this is with some sort of training scheme, but for now, this is
-the way it is.
+of several of the user’s real choices it has no way of making informed decisions.
 
-One can imagine that one way to hook this into Alfred the Butler is to start the model when a
-user begins to interact with it, to query each card on a screenful when the screen is first shown,
-to mark each card as the user marks them, and, when leaving a screen, to mark all the unmarked cards
-as `"ignore"`. Note, however, that for such a process the IBL model will have nothing useful to say
-for any cards on the first screen. Though the model is so wimpy, anyway, that.... Lot’s of room
-for negotiation and improvement on all this.
+### The `advise` command
+
+The `advise` command (`http://localhost:8000/advise`) sends an indication of attributes that
+should figure more higly in the decision making for *this* user. Its argument is of the form
+
+    {"user": "<the user id goes here>",
+     "title_relevant": <a boolean, JSON true or false>,
+     "content_relevant": <a boolean, JSON true or false>,
+     "content_timely": <a boolean, JSON true or false>,
+     "author_trustworthy": <a boolean, JSON true or false>,
+     "source_trustworthy": <a boolean, JSON true or false>,
+     "source_familiar": <a boolean, JSON true or false>}
+
+All arguments other than `user` are optional. Those that are supplied and `true` have their
+weights increased; Those that are `false` or absent do not.
+The command can be called repeatedly, with the same or different values, to strengthen the
+weight increase of the designated attributes.
+Note that these weight increases are not shared between users.
+
+The `advise` command returns nothing.
 
 ### The `finish` command
 
