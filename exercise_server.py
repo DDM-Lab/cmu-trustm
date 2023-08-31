@@ -68,6 +68,7 @@ for i, (name, content, age, author, source, confidence, read, ground_truth) in z
          "up"],
 ]):
     id=f"card-{i}"
+    pp(send_receive("advise", id=id))
     if i:
         pp(send_receive("query", id=id, name=name, content=content,
                         age=age, author=author, source=source,
@@ -82,7 +83,8 @@ for i, (name, content, age, author, source, confidence, read, ground_truth) in z
                          source_familiar=bool(not randrange(5)))
     else:
         pp(send_receive("query", id=id, name=name, content=content, confidence=confidence))
-        send_receive("advise", id=id, source_familiar=True, title_relevant=False)
+        pp(send_receive("advise", id=id, source_familiar=True, title_relevant=False))
     send_receive("mark", id=id, action=ground_truth)
 
+pp(send_receive("advise", id=id))
 send_receive("finish")

@@ -148,6 +148,7 @@ class State:
         if weights.source_trustworthy or weights.source_familiar:
             self.weights["source"] += WEIGHT_INCREMENT
         self.set_similarity()
+        return self.weights
 
 
 states = {}

@@ -92,7 +92,20 @@ The command can be called repeatedly, with the same or different values, to stre
 weight increase of the designated attributes.
 Note that these weight increases are not shared between users.
 
-The `advise` command returns nothing.
+#### Return value
+
+The `advise` command returns a JSON object mapping attribute names to their weights, after any
+adjustments made by the `advise` command, thus
+
+    {'name': 2.5,
+     'content': 1,
+     'age': 1,
+     'author': 1.5,
+     'source': 1.5,
+     'confidence': 2,
+     'read': 2}
+
+Note that the current weights can be queried by sending an `advise` with only the `id` argument.
 
 ### The `finish` command
 
