@@ -2,7 +2,7 @@
 
 This is a simple server providing a JSON API, using FastAPI, to an IBL model for the TRUST’M project.
 
-There are four calls to be made to this server: `start`, `query`, `mark` and `finish`. Each should be called
+There are five calls to be made to this server: `start`, `query`, `mark`, `advise` and `finish`. Each should be called
 using the POST HTTP method, passing arguments as a JSON object.
 
 All the JSON messages passed to these commands contains a field `user` which should be a non-empty string,
@@ -105,7 +105,7 @@ adjustments made by the `advise` command, thus
      'confidence': 2,
      'read': 2}
 
-Note that the current weights can be queried by sending an `advise` with only the `id` argument.
+Note that the current weights can be queried by sending an `advise` with only the `user` argument.
 
 ### The `finish` command
 
